@@ -189,11 +189,34 @@ https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-lo
 
 > Pregunta 9 : Securiza el entorno poniendo un htpassword delante.
 
+Hemos puesto un passwd usando openssl:
+`echo "kibanaadmin:`openssl passwd -apr1`" | sudo tee -a /etc/nginx/htpasswd.users`
+
+Y hemos configurado nginx para que lo use:
+```
+server {
+    listen 80;
+
+    server_name elk.devops-alumno08.com;
+
+    auth_basic "Restricted Access";
+    auth_basic_user_file /etc/nginx/htpasswd.users;
+
+    location / {
+        proxy_pass http://localhost:5601;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
 A continuación instala filebeat. Activa los módulos de nginx, auditd y system.
 ```
 	filebeat setup -e
 	for i in auditd nginx system ; do filebeat modules enable $i ; done
 ```
 	
-Comprueba que recibimos logs en kibana.
 
